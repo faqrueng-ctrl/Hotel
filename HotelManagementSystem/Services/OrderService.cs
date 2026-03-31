@@ -1,4 +1,7 @@
-﻿using System.Linq;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
 using HotelManagementSystem.Data;
 using HotelManagementSystem.Helpers;
 using HotelManagementSystem.Models;
@@ -7,51 +10,69 @@ namespace HotelManagementSystem.Services
 {
     public class OrderService
     {
-        private readonly AppDbContext _context = new AppDbContext();
-
-        public void CreateOrder()
+        public void Checkout()
         {
-            var userId = Session.CurrentUser.UserId;
-
-            var cart = _context.CartItems
-                .Where(c => c.UserId == userId)
-                .ToList();
-
-            if (!cart.Any()) return;
-
-            var order = new Order
+            if (Session.CurrentUser == null)
             {
-                UserId = userId,
-                OrderDate = System.DateTime.Now,
-                Total = 0
-            };
-
-            _context.Orders.Add(order);
-            _context.SaveChanges();
-
-            decimal total = 0;
-
-            foreach (var item in cart)
-            {
-                var product = _context.Products.Find(item.ProductId);
-
-                var orderItem = new OrderItem
-                {
-                    OrderId = order.OrderId,
-                    ProductId = product.ProductId,
-                    Quantity = item.Quantity,
-                    Price = product.Price
-                };
-
-                total += product.Price * item.Quantity;
-
-                _context.OrderItems.Add(orderItem);
+                throw new InvalidOperationException("Требуется авторизация.");
             }
 
-            order.Total = total;
+            using (var db = new AppDbContext())
+            {
+                var userId = Session.CurrentUser.UserId;
+                var cart = db.CartItems
+                    .Include(c => c.Product)
+                    .Where(c => c.UserId == userId)
+                    .ToList();
 
-            _context.CartItems.RemoveRange(cart);
-            _context.SaveChanges();
+                if (!cart.Any())
+                {
+                    throw new InvalidOperationException("Корзина пуста.");
+                }
+
+                var order = new Order
+                {
+                    UserId = userId,
+                    OrderDate = DateTime.Now,
+                    Total = 0m
+                };
+
+                db.Orders.Add(order);
+                db.SaveChanges();
+
+                decimal total = 0m;
+                foreach (var item in cart)
+                {
+                    var price = item.Product.Price;
+                    db.OrderItems.Add(new OrderItem
+                    {
+                        OrderId = order.OrderId,
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        Price = price
+                    });
+
+                    total += price * item.Quantity;
+                }
+
+                order.Total = total;
+                db.CartItems.RemoveRange(cart);
+                db.SaveChanges();
+            }
+        }
+
+        public List<Order> GetMyOrders()
+        {
+            if (Session.CurrentUser == null)
+            {
+                return new List<Order>();
+            }
+
+            using (var db = new AppDbContext())
+            {
+                var userId = Session.CurrentUser.UserId;
+                return db.Orders.Where(o => o.UserId == userId).OrderByDescending(o => o.OrderDate).ToList();
+            }
         }
     }
 }

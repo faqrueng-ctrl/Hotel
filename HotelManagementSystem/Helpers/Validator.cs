@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 
 namespace HotelManagementSystem.Helpers
 {
@@ -6,16 +6,30 @@ namespace HotelManagementSystem.Helpers
     {
         public static bool IsValidEmail(string email)
         {
-            return Regex.IsMatch(email,
-                @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return false;
+            }
+
+            return Regex.IsMatch(email.Trim(), @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+        }
+
+        public static bool IsValidPhone(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                return false;
+            }
+
+            return Regex.IsMatch(phone.Trim(), @"^\+?[0-9\-\s()]{7,20}$");
         }
 
         public static bool IsValidPassword(string password)
         {
-            return password.Length >= 6;
+            return !string.IsNullOrWhiteSpace(password) && password.Length >= 6;
         }
 
-        public static bool IsNotEmpty(string value)
+        public static bool IsRequired(string value)
         {
             return !string.IsNullOrWhiteSpace(value);
         }

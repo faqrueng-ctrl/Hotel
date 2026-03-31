@@ -1,16 +1,14 @@
-﻿using HotelManagementSystem.Forms;
-using System;
 using System.Windows.Forms;
 
-public partial class Form1 : Form
+namespace HotelManagementSystem.Forms
 {
-    private void btnProducts_Click(object sender, EventArgs e)
+    public class AdminPanelForm : Form
     {
-        new CatalogForm().Show();
-    }
-
-    private void btnUsers_Click(object sender, EventArgs e)
-    {
-        new UsersForm().Show();
+        public AdminPanelForm()
+        {
+            Text = "Admin Panel";
+            Width = 300;
+            Height = 200;
+        }
     }
 }
