@@ -1,4 +1,4 @@
-﻿using HotelManagementSystem.Models;
+using HotelManagementSystem.Models;
 
 namespace HotelManagementSystem.Helpers
 {
@@ -6,6 +6,16 @@ namespace HotelManagementSystem.Helpers
     {
         public static User CurrentUser { get; set; }
 
+        public static bool IsAuthenticated => CurrentUser != null;
+        public static bool IsUser => CurrentUser?.Role?.Name == "User";
+        public static bool IsManager => CurrentUser?.Role?.Name == "Manager";
         public static bool IsAdmin => CurrentUser?.Role?.Name == "Admin";
+
+        public static bool HasAtLeastManagerRights => IsManager || IsAdmin;
+
+        public static void Logout()
+        {
+            CurrentUser = null;
+        }
     }
 }
